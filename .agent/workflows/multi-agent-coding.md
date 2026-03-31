@@ -1,39 +1,44 @@
 ---
-description: How to run the automated Multi-Agent Coding Framework with Self-Correction
+description: How to run the automated Multi-Agent Coding Framework with Sequential Pipeline & Self-Correction
 ---
 
 # Multi-Agent Coding Framework in NestJS
 
-This workflow automation handles the entire process of generating, validating, and testing code via Google Gemini AI agents within your NestJS workspace.
+This workflow automation handles the entire process of generating, validating, and testing code via Google Gemini AI agents within your NestJS workspace. It uses a **Strict Sequential Pipeline** to execute tasks predictably and reliably.
 
 ## Prerequisites
 
 1. Ensure your `.env` file has a valid `GEMINI_API_KEY`.
-2. Make sure you install the required packages (e.g. `@langchain/google-genai`, `@nestjs/config`, `typeorm`, etc.).
-3. Start the NestJS background development server.
+2. Install the necessary packages (e.g., `@langchain/google-genai`, `@nestjs/config`, `typeorm`, `jest`, etc.).
+3. **Important:** Because AI generation writes directly to `src/`, running `pnpm run start:dev` will trigger aggressive nodemon restarts that may kill active API workflows. Therefore, to use the agents safely, start the server without file watching mode.
 
 // turbo-all
 ## Steps to trigger
 
-1. Keep your NestJS server running in the primary background terminal:
-   \`\`\`bash
-   pnpm run start:dev
-   \`\`\`
+1. Start your NestJS server in the primary terminal (WITHOUT `--watch` mode):
+   ```bash
+   pnpm run start
+   ```
 
-2. Execute the multi-agent orchestration by sending a POST request to your local API.
-   The Manager Agent will review your goal, split the work, and dispatch it to the specific Node instances.
-   \`\`\`bash
+2. Execute the multi-agent orchestration by sending a POST request to your API.
+   The graph will strictly flow from Manager ➔ Migration ➔ Logic ➔ Test.
+   ```bash
    curl -X POST http://localhost:3000/agents/generate \
    -H "Content-Type: application/json" \
    -d '{"goal": "Create a User schema, a create method in user service, and its unit test."}'
-   \`\`\`
+   ```
 
-## Expected Behavior and the Self-Correction Loop
+## Architecture: The Strict Sequential Pipeline
 
-- **Manager Node**: Determines who to summon.
-- **Migration Node**: Connects to your `src/migrations` or generates `typeorm` Entities.
-- **Logic Node**: Builds strict NestJS structure with Controllers, Modules, Services, and *Repository patterns*.
-- **Test Node**: Reads generated files and writes \`.spec.ts\`. Critically, the Test node **will run the npm tests** via \`executeCommandTool\`.
-- **Self-Correction (The Magic)**: If the \`.spec.ts\` fails when running \`npm run test\`, the graph automatically traps the Test node and loops back to **Logic Node** (sending the `testError` along). The Logic node will rewrite the code. This loop happens a maximum of 3 times before returning to the Manager.
+The Graph strictly follows a 1-way sequence, utilizing external Rule files (`src/agents/rules/*.rule.md`) to define isolated, professional personas:
 
-Observe the Terminal logs on your `start:dev` process to see real-time updates as nodes take turns operating on your codebase!
+1. **Manager Node (Tech Lead)**: Reads the prompt, analyzes the goal, breaks it down into actionable tasks, and stores the Blueprint in the State.
+2. **Migration Node (DB Specialist)**: Consumes the Blueprint, uses `listDirectoryTool` to find existing schemas, and generates secure TypeORM Entities with strict typing.
+3. **Logic Node (Backend Developer)**: Reads the newly created databases and writes clean NestJS Services, Repositories, and Controllers via Clean Architecture. 
+   - 🛡️ **Self-Compiler Check**: Before completing, it automatically triggers `npx tsc --noEmit`. If there are TypeScript syntax errors, it traps itself in a micro-loop to fix the code.
+4. **Test Node (QA Engineer)**: Receives the logically compiled code and writes robust `.spec.ts` mocking dependencies. It directly executes `npm run test` using `executeCommandTool`.
+
+### The Magic: Automatic Self-Correction Loop
+If the Unit Test fails (e.g. business logic flaw), the Test Agent isolates the error log and violently **forces the Workflow to route backward to the Logic Node**. The Logic Node is given the error log and must rewrite its code. This backward loop cycles a maximum of 3 times.
+
+Observe the Terminal logs on your `pnpm run start` process to see real-time Node turns, automatic TS-compiles, and automated Jest tests firing out sequentially on your codebase!
