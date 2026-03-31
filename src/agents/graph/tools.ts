@@ -75,3 +75,25 @@ export const executeCommandTool = tool(
     }),
   }
 );
+
+export const listDirectoryTool = tool(
+  async ({ targetPath }) => {
+    try {
+      const p = path.join(process.cwd(), targetPath);
+      if (!fs.existsSync(p)) {
+        return `Directory ${targetPath} does not exist.`;
+      }
+      const files = fs.readdirSync(p);
+      return `Contents of ${targetPath}:\n${files.join('\n')}`;
+    } catch (error) {
+      return `Error listing directory ${targetPath}: ${error.message}`;
+    }
+  },
+  {
+    name: 'list_directory_tool',
+    description: 'Lists the files and folders inside a specific directory. Useful for understanding project structure or checking if an entity file already exists.',
+    schema: z.object({
+      targetPath: z.string().describe('The relative directory path to list, e.g., "src/users/entities" or "src/orders"'),
+    }),
+  }
+);

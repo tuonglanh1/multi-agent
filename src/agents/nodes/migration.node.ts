@@ -26,13 +26,27 @@ export const migrationNode = async (state: typeof AgentState.State, model: ChatG
     ],
   });
 
+  // Extract dynamically written files from ToolCalls
+  const writtenFiles: string[] = [];
+  for (const msg of responseMsg.messages) {
+    if ('tool_calls' in msg && Array.isArray((msg as any).tool_calls)) {
+      for (const call of (msg as any).tool_calls) {
+        if (call.name === 'write_file_tool' && call.args?.filePath) {
+          writtenFiles.push(call.args.filePath);
+        }
+      }
+    }
+  }
+
+  const currentTouchedFiles = state.touchedFiles || [];
+  const updatedTouchedFiles = Array.from(new Set([...currentTouchedFiles, ...writtenFiles]));
+
   const lastMsg = responseMsg.messages[responseMsg.messages.length - 1];
 
   return {
     messages: [
-      new HumanMessage(`Migration Agent completed task: ${lastMsg.content}`),
+      new HumanMessage(`Migration Agent completed task: ${typeof lastMsg.content === 'string' ? lastMsg.content : JSON.stringify(lastMsg.content)}`),
     ],
-    // The touched files can be inferred or manually passed; simplified for demo
-    touchedFiles: ['src/migrations/db-change.ts'], 
+    touchedFiles: updatedTouchedFiles,
   };
 };

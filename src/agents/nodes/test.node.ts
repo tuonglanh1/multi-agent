@@ -33,12 +33,27 @@ export const testNode = async (state: typeof AgentState.State, model: ChatGoogle
   const nextFailures = didFail ? state.testFailures + 1 : state.testFailures;
   const testErrorStr = didFail ? `Test Execution Failed:\n${lastMsgStr}` : '';
 
+  // Extract dynamically written files from ToolCalls
+  const writtenFiles: string[] = [];
+  for (const msg of responseMsg.messages) {
+    if ('tool_calls' in msg && Array.isArray((msg as any).tool_calls)) {
+      for (const call of (msg as any).tool_calls) {
+        if (call.name === 'write_file_tool' && call.args?.filePath) {
+          writtenFiles.push(call.args.filePath);
+        }
+      }
+    }
+  }
+
+  const currentTouchedFiles = state.touchedFiles || [];
+  const updatedTouchedFiles = Array.from(new Set([...currentTouchedFiles, ...writtenFiles]));
+
   return {
     messages: [
       new HumanMessage(`Test Agent completed task. Status: ${didFail ? 'FAILED' : 'PASSED'}. Details: ${lastMsgStr}`),
     ],
     testFailures: nextFailures,
     testError: testErrorStr,
-    touchedFiles: ['src/..., test/...'],
+    touchedFiles: updatedTouchedFiles,
   };
 };
