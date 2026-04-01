@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { StateGraph, END } from '@langchain/langgraph';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
+import * as fs from 'fs';
 import { AgentState } from '../graph/state';
 import { managerNode } from '../nodes/manager.node';
 import { migrationNode } from '../nodes/migration.node';
@@ -35,7 +36,17 @@ export class OrchestratorService {
     const managerFn = async (state) => {
       this.logger.log('Waiting for Manager Agent...');
       // await delay(2000);
-      return await  managerNode(state, model);
+      const result = await managerNode(state, model);
+      
+      try {
+        const mdContent = `# Agent Blueprint & Plan\n\n## Tasks\n${result.plan?.map(p => '- ' + p).join('\n') || 'None'}\n\n## Blueprint JSON\n\`\`\`json\n${JSON.stringify(result.blueprint, null, 2)}\n\`\`\`\n`;
+        fs.writeFileSync('blueprint.md', mdContent, 'utf8');
+        this.logger.log('Successfully exported plan to blueprint.md');
+      } catch (err) {
+        this.logger.error('Failed to write blueprint.md', err);
+      }
+
+      return result;
     };
     const migrationFn = async (state) => {
       this.logger.log('Waiting for Migration Agent...');
