@@ -23,7 +23,7 @@ export const AgentState = Annotation.Root({
   }),
   // Current active step in the plan
   currentStep: Annotation<string>({
-    reducer: (x, y) => y ?? x,
+    reducer: (curr, next) => next,
     default: () => '',
   }),
   // Files created or modified during this run
@@ -35,17 +35,22 @@ export const AgentState = Annotation.Root({
     default: () => [],
   }),
   testFailures: Annotation<number>({
-    reducer: (x, y) => y ?? x,
+    reducer: (curr, next) => next,
     default: () => 0,
   }),
   // Error message from the test execution
   testError: Annotation<string>({
-    reducer: (x, y) => y ?? x,
+    reducer: (curr, next) => next,
     default: () => '',
   }),
   // Final summary of the execution
   summary: Annotation<string>({
-    reducer: (x, y) => y ?? x,
+    reducer: (curr, next) => next,
     default: () => '',
+  }),
+  // The structured blueprint (module, models, endpoints, workflows)
+  blueprint: Annotation<any>({
+    reducer: (curr, next) => next,
+    default: () => ({}),
   }),
 });

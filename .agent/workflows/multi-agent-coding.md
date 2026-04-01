@@ -28,14 +28,14 @@ This workflow automation handles the entire process of generating, validating, a
    -d '{"goal": "Create a User schema, a create method in user service, and its unit test."}'
    ```
 
-## Architecture: The Strict Sequential Pipeline
+## Architecture: Blueprint-Driven Sequential Pipeline
 
-The Graph strictly follows a 1-way sequence, utilizing external Rule files (`src/agents/rules/*.rule.md`) to define isolated, professional personas:
+The Graph strictly follows a 1-way sequence, utilizing external Rule files (`src/agents/rules/*.rule.md`) and a rigorous **JSON Blueprint** mechanism to define isolated, professional personas:
 
-1. **Manager Node (Tech Lead)**: Reads the prompt, analyzes the goal, breaks it down into actionable tasks, and stores the Blueprint in the State.
-2. **Migration Node (DB Specialist)**: Consumes the Blueprint, uses `listDirectoryTool` to find existing schemas, and generates secure TypeORM Entities with strict typing.
-3. **Logic Node (Backend Developer)**: Reads the newly created databases and writes clean NestJS Services, Repositories, and Controllers via Clean Architecture. 
-   - 🛡️ **Self-Compiler Check**: Before completing, it automatically triggers `npx tsc --noEmit`. If there are TypeScript syntax errors, it traps itself in a micro-loop to fix the code.
+1. **Manager Node (Tech Lead)**: Reads the prompt and generates a strict structured **JSON Blueprint** instead of free-text plans. The blueprint explicitly defines all features: `module`, `models` (fields, relations), `workflows`, and `endpoints` (auth, roles).
+2. **Migration Node (DB Specialist)**: Consumes `blueprint.module.models` and transforms the structured schema directly into TypeORM Entities with relationships and strict typing.
+3. **Logic Node (Backend Developer)**: Consumes the blueprint's `workflows` and `endpoints`. It applies **Pattern Mapping** (e.g., Check duplicate + create, Assign relation, Toggle status) to generate clean NestJS Services, Controllers, DTOs, and Route Guards.
+   - 🛡️ **Self-Compiler Check**: Before completing, it automatically triggers `npx tsc --noEmit`. If there are TypeScript syntax errors, it traps itself in a micro-loop to fix the code (missing imports, typos).
 4. **Test Node (QA Engineer)**: Receives the logically compiled code and writes robust `.spec.ts` mocking dependencies. It directly executes `npm run test` using `executeCommandTool`.
 
 ### The Magic: Automatic Self-Correction Loop

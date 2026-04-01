@@ -22,7 +22,11 @@ export const migrationNode = async (state: typeof AgentState.State, model: ChatG
   const responseMsg = await agent.invoke({
     messages: [
       new HumanMessage(`Goal: ${state.goal}. 
-      The manager says: ${state.messages[state.messages.length - 1]?.content}`),
+      The manager says: ${state.messages[state.messages.length - 1]?.content}.
+      
+      JSON BLUEPRINT TO FOLLOW:
+      ${JSON.stringify(state.blueprint, null, 2)}
+      `),
     ],
   });
 

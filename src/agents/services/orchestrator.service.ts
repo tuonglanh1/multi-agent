@@ -33,22 +33,22 @@ export class OrchestratorService {
 
     // 2. Wrap Nodes to Inject Model and add artificial delay
     const managerFn = async (state) => {
-      this.logger.log('Waiting 1s to respect Gemini rate limits...');
+      this.logger.log('Waiting for Manager Agent...');
       // await delay(2000);
       return await  managerNode(state, model);
     };
     const migrationFn = async (state) => {
-      this.logger.log('Waiting 2s to respect Gemini rate limits...');
+      this.logger.log('Waiting for Migration Agent...');
       // await delay(2000);
       return await migrationNode(state, model);
     };
     const logicFn = async (state) => {
-      this.logger.log('Waiting 3s to respect Gemini rate limits...');
+      this.logger.log('Waiting for Logic Agent...');
       // await delay(2000);
       return await logicNode(state, model);
     };
     const testFn = async (state) => {
-      this.logger.log('Waiting 4s to respect Gemini rate limits...');
+      this.logger.log('Waiting for Test Agent...');
       // await delay(2000);
       return await testNode(state, model);
     };
